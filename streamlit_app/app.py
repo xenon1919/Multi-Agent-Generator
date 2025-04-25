@@ -26,14 +26,14 @@ def main():
     st.title("Multi-Framework Agent Generator")
     st.write("Generate agent code for different frameworks based on your requirements!")
 
-    # Display IBM WatsonX AI information
-    st.sidebar.info("Powered by IBM Watsonx")
+    # Display OpenAI information
+    st.sidebar.info("Powered by OpenAI GPT-4o")
     
     # Check for API key
-    if not os.getenv("WATSON_API_KEY"):
-        api_key = st.sidebar.text_input("Watson API Key:", type="password")
+    if not os.getenv("OPENAI_API_KEY"):
+        api_key = st.sidebar.text_input("OpenAI API Key:", type="password")
         if api_key:
-            os.environ["WATSON_API_KEY"] = api_key
+            os.environ["OPENAI_API_KEY"] = api_key
 
     # Framework selection
     st.sidebar.title("🔄 Framework Selection")
@@ -47,31 +47,29 @@ def main():
             "react": "ReAct Framework"
         }[x]
     )
-    
-    # Framework description
     framework_descriptions = {
-        "crewai": """
-        **CrewAI** is a framework for orchestrating role-playing autonomous AI agents. 
-        It allows you to create a crew of agents that work together to accomplish tasks, 
-        with each agent having a specific role, goal, and backstory.
-        """,
-        "crewai-flow": """
-        **CrewAI Flow** extends CrewAI with event-driven workflows. 
-        It enables you to define multi-step processes with clear transitions between steps,
-        maintaining state throughout the execution, and allowing for complex orchestration
-        patterns like sequential, parallel, and conditional execution.
-        """,
-        "langgraph": """
-        **LangGraph** is LangChain's framework for building stateful, multi-actor applications with LLMs.
-        It provides a way to create directed graphs where nodes are LLM calls, tools, or other operations, 
-        and edges represent the flow of information between them.
-        """,
-        "react": """
-        **ReAct** (Reasoning + Acting) is a framework that combines reasoning and action in LLM agents.
-        It prompts the model to generate both reasoning traces and task-specific actions in an interleaved manner, 
-        creating a synergy between the two that leads to improved performance.
-        """
-    }
+            "crewai": """
+            **CrewAI** is a framework for orchestrating role-playing autonomous AI agents. 
+            It allows you to create a crew of agents that work together to accomplish tasks, 
+            with each agent having a specific role, goal, and backstory.
+            """,
+            "crewai-flow": """
+            **CrewAI Flow** extends CrewAI with event-driven workflows. 
+            It enables you to define multi-step processes with clear transitions between steps,
+            maintaining state throughout the execution, and allowing for complex orchestration
+            patterns like sequential, parallel, and conditional execution.
+            """,
+            "langgraph": """
+            **LangGraph** is LangChain's framework for building stateful, multi-actor applications with LLMs.
+            It provides a way to create directed graphs where nodes are LLM calls, tools, or other operations, 
+            and edges represent the flow of information between them.
+            """,
+            "react": """
+            **ReAct** (Reasoning + Acting) is a framework that combines reasoning and action in LLM agents.
+            It prompts the model to generate both reasoning traces and task-specific actions in an interleaved manner, 
+            creating a synergy between the two that leads to improved performance.
+            """
+        }
     
     st.sidebar.markdown(framework_descriptions[framework])
     
@@ -107,10 +105,8 @@ def main():
             )
         
         if st.button(f"🚀 Generate {framework.upper()} Code"):
-            if not os.getenv("WATSON_API_KEY"):
-                st.error("Please set your Watson API Key in the sidebar")
-            elif not os.getenv("PROJECT_ID"):
-                st.error("PROJECT_ID not found in .env file")
+            if not os.getenv("OPENAI_API_KEY"):
+                st.error("Please set your OpenAI API Key in the sidebar")
             else:
                 with st.spinner(f"Generating your {framework} code..."):
                     generator = AgentGenerator()

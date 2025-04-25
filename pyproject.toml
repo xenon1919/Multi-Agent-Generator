@@ -8,7 +8,7 @@ dependencies = [
     "crewai",
     "langchain",
     "langgraph",
-    "ibm-watsonx-ai",
+    "openai",
     "python-dotenv",
     "pydantic",
 ]

@@ -1,6 +1,6 @@
 # Multi-Agent Generator
 
-A powerful tool that transforms plain English instructions into fully configured multi-agent AI teams - no scripting, no complexity. Powered by IBM watsonx AI with Meta Llama 3 70B model and Streamlit UI.
+A powerful tool that transforms plain English instructions into fully configured multi-agent AI teams - no scripting, no complexity. Powered by OpenAI GPT models with an intuitive Streamlit UI.
 
 ## Features
 
@@ -22,10 +22,9 @@ pip install multi-agent-generator
 
 ## Prerequisites
 
-- IBM watsonx API key
+- OpenAI API key
 - Environment variables setup
-  - `WATSON_API_KEY`: Your IBM watsonx API key
-  - `PROJECT_ID`: Your IBM watsonx project ID
+  - `OPENAI_API_KEY`: Your OpenAI API key
 
 ## Usage
 

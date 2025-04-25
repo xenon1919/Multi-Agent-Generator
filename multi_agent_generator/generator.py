@@ -1,45 +1,43 @@
 import os
 import json
 import streamlit as st
-from model_inference import ModelInference  # Fixed the import
+from .model_inference import ModelInference
 
 from typing import Dict, Any
 
 class AgentGenerator:
     def __init__(self):
-        # Initialize WatsonX AI model
-        self.model_id = "meta-llama/llama-3-3-70b-instruct"
+        # Initialize OpenAI model
+        self.model_id = "gpt-4o-mini"  
         self.parameters = {
-            "decoding_method": "greedy",
-            "max_new_tokens": 1000,  # Increased for complex JSON responses
-            "min_new_tokens": 0,
-            "repetition_penalty": 1
+            "max_new_tokens": 1000,  # Max tokens to generate
+            "temperature": 0.7,      # Creativity level
+            "top_p": 0.95,           # Nucleus sampling
+            "frequency_penalty": 0,  # Discourage repetition
+            "presence_penalty": 0    # Discourage topic repetition
         }
-        
-        # Get project_id from environment
-        self.project_id = os.getenv("PROJECT_ID")
         
         # Initialize model on first use instead of constructor
         self.model = None
     
     def _initialize_model(self):
         if self.model is None:
-            credentials = {
-                "url": "https://eu-de.ml.cloud.ibm.com",
-                "apikey": os.getenv("WATSON_API_KEY")
-            }
+            # Get API key from environment
+            api_key = os.getenv("OPENAI_API_KEY")
             
-            if not credentials["apikey"]:
-                st.warning("Watson API Key not found in environment. Please enter it below.")
-                credentials["apikey"] = st.text_input("Enter Watson API Key:", type="password")
-                if not credentials["apikey"]:
+            if not api_key:
+                st.warning("OpenAI API Key not found in environment. Please enter it below.")
+                api_key = st.text_input("Enter OpenAI API Key:", type="password")
+                if not api_key:
                     st.stop()
+                os.environ["OPENAI_API_KEY"] = api_key
+            
+            credentials = {"api_key": api_key}
             
             self.model = ModelInference(
                 model_id=self.model_id,
                 params=self.parameters,
-                credentials=credentials,
-                project_id=self.project_id
+                credentials=credentials
             )
         
     def analyze_prompt(self, user_prompt: str, framework: str) -> Dict[str, Any]:
@@ -48,7 +46,7 @@ class AgentGenerator:
         system_prompt = self._get_system_prompt_for_framework(framework)
         
         try:
-            # Format prompt for Llama-3
+            # Format prompt for OpenAI
             formatted_prompt = f"""<|begin_of_text|>
 <|system|>
 {system_prompt}
@@ -57,8 +55,8 @@ class AgentGenerator:
 <|assistant|>
 """
             
-            # Generate response using WatsonX
-            response = self.model.generate_text(prompt=formatted_prompt, guardrails=True)
+            # Generate response using OpenAI
+            response = self.model.generate_text(prompt=formatted_prompt)
             
             # Extract JSON from response
             json_start = response.find('{')
