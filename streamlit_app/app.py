@@ -3,9 +3,10 @@ import time
 import streamlit as st
 
 from multi_agent_generator.generator import AgentGenerator
-from multi_agent_generator.multi_agent_generator.frameworks.crewai_generator import create_crewai_code, create_crewai_flow_code
-from multi_agent_generator.multi_agent_generator.frameworks.langgraph_generator import create_langgraph_code
-from multi_agent_generator.multi_agent_generator.frameworks.react_generator import create_react_code
+from multi_agent_generator.frameworks.crewai_generator import create_crewai_code
+from multi_agent_generator.frameworks.langgraph_generator import create_langgraph_code
+from multi_agent_generator.frameworks.react_generator import create_react_code
+from multi_agent_generator.frameworks.crewai_flow_generator import create_crewai_flow_code
 
 def create_code_block(config, framework):
     if framework == "crewai":

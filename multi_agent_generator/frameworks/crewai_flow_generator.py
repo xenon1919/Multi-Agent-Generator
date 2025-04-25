@@ -1,11 +1,22 @@
-from crewai import Agent as CrewAgent, Task as CrewTask, Crew
-from typing import List, Dict, Any, Optional
-import os
-import json
-import time
+"""
+Generator for CrewAI Flow code.
+"""
+from typing import Dict, Any
 
-def create_crewai_code(config: Dict[str, Any]) -> str:
-    # Start with the basic imports plus Flow imports
+def create_crewai_flow_code(config: Dict[str, Any]) -> str:
+    """
+    Generate CrewAI Flow code from a configuration.
+    
+    This function creates event-driven workflow code using the CrewAI Flow framework,
+    with proper transitions between different workflow steps.
+    
+    Args:
+        config: Dictionary containing agents, tasks, and workflow configuration
+        
+    Returns:
+        Generated Python code as a string
+    """
+    # Start with the basic imports
     code = "from crewai import Agent, Task, Crew\n"
     code += "from crewai.flow.flow import Flow, listen, start\n"
     code += "from typing import Dict, List, Any\n"
@@ -56,7 +67,10 @@ def create_crewai_code(config: Dict[str, Any]) -> str:
     code += "    def initial_input(self):\n"
     code += "        \"\"\"Process the initial user query.\"\"\"\n"
     code += "        print(\"Starting workflow...\")\n"
-    code += "        self.state.current_step = \"data_collection\"\n"
+    
+    # Set the first task as the current step
+    first_task = config["tasks"][0]["name"] if config["tasks"] else "completed"
+    code += f"        self.state.current_step = \"{first_task}\"\n"
     code += "        return self.state\n\n"
     
     # Add task steps with @listen decorators
@@ -65,7 +79,7 @@ def create_crewai_code(config: Dict[str, Any]) -> str:
     
     for i, task in enumerate(tasks):
         task_name = task["name"].replace("-", "_")
-        code += f"    @listen({previous_step})\n"
+        code += f"    @listen('{previous_step}')\n"
         code += f"    def execute_{task_name}(self, state):\n"
         code += f"        \"\"\"Execute the {task['name']} task.\"\"\"\n"
         code += f"        print(f\"Executing task: {task['name']}\")\n"
@@ -83,8 +97,8 @@ def create_crewai_code(config: Dict[str, Any]) -> str:
         code += f"        self.state.results[\"{task['name']}\"] = result\n"
         
         if i < len(tasks) - 1:
-            next_step = tasks[i+1]["name"].replace("-", "_")
-            code += f"        self.state.current_step = \"{next_step}\"\n"
+            next_task = tasks[i+1]["name"]
+            code += f"        self.state.current_step = \"{next_task}\"\n"
         else:
             code += f"        self.state.current_step = \"completed\"\n"
             
@@ -92,7 +106,7 @@ def create_crewai_code(config: Dict[str, Any]) -> str:
         previous_step = f"execute_{task_name}"
     
     # Add final aggregation step
-    code += f"    @listen({previous_step})\n"
+    code += f"    @listen('{previous_step}')\n"
     code += f"    def aggregate_results(self, state):\n"
     code += f"        \"\"\"Combine all results from tasks.\"\"\"\n"
     code += f"        print(\"Workflow completed, aggregating results...\")\n"
@@ -125,5 +139,3 @@ def create_crewai_code(config: Dict[str, Any]) -> str:
     code += "    print(result)\n"
     
     return code
-    # # Now wrap the generated code in JSON format
-    # return json.dumps({"generated_code": code}, indent=4)

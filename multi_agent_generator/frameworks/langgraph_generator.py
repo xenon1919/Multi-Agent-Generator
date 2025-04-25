@@ -116,4 +116,5 @@ if __name__ == "__main__":
 """
     
     # Now wrap the generated code in JSON format
-    return json.dumps({"generated_code": code}, indent=4)
+    # return json.dumps({"generated_code": code}, indent=4)
+    return code
