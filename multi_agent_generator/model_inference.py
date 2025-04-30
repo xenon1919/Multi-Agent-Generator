@@ -1,10 +1,23 @@
-from openai import OpenAI
-from typing import Dict, Any, Optional, List
+"""
+Model inference utilities for multiple LLM providers.
+"""
+from typing import Dict, Any, Optional, List, Union
 import os
 import json
 
+class BaseModelInference:
+    """Base class for model inference implementations."""
+    
+    def generate_text(self, prompt: str, guardrails: bool = False) -> str:
+        """Generate text based on the prompt."""
+        raise NotImplementedError("Subclasses must implement generate_text method")
+    
+    def generate_text_stream(self, prompt: str, guardrails: bool = False) -> List[str]:
+        """Generate text in a streaming fashion."""
+        raise NotImplementedError("Subclasses must implement generate_text_stream method")
 
-class ModelInference:
+
+class OpenAIModelInference(BaseModelInference):
     """
     Wrapper for OpenAI model inference.
     
@@ -17,7 +30,7 @@ class ModelInference:
         model_id: str,
         params: Dict[str, Any],
         credentials: Optional[Dict[str, str]] = None,
-        project_id: Optional[str] = None
+        project_id: Optional[str] = None  # Not used for OpenAI, kept for API compatibility
     ):
         """
         Initialize the OpenAI client.
@@ -28,6 +41,11 @@ class ModelInference:
             credentials: Optional API credentials
             project_id: Not used for OpenAI, kept for API compatibility
         """
+        try:
+            from openai import OpenAI
+        except ImportError:
+            raise ImportError("OpenAI package is not installed. Install it with 'pip install openai'")
+            
         self.model_id = model_id
         self.params = params
         
@@ -164,3 +182,133 @@ class ModelInference:
             messages.append({"role": "user", "content": prompt})
             
         return messages
+
+
+class WatsonXModelInference(BaseModelInference):
+    """
+    Wrapper for IBM WatsonX model inference.
+    
+    This class provides a simplified interface for text generation
+    using IBM WatsonX models.
+    """
+    
+    def __init__(
+        self,
+        model_id: str,
+        params: Dict[str, Any],
+        credentials: Optional[Dict[str, str]] = None,
+        project_id: Optional[str] = None
+    ):
+        """
+        Initialize the WatsonX model.
+        
+        Args:
+            model_id: The ID of the model to use (e.g., "meta-llama/llama-3-3-70b-instruct")
+            params: Generation parameters (decoding_method, max_new_tokens, etc.)
+            credentials: Required API credentials with url and apikey
+            project_id: Required WatsonX project ID
+        """
+        try:
+            from ibm_watsonx_ai.foundation_models import ModelInference
+        except ImportError:
+            raise ImportError("IBM WatsonX AI package is not installed. Install it with 'pip install ibm-watsonx-ai'")
+            
+        self.model_id = model_id
+        self.params = params
+        
+        # Get credentials from input or environment
+        if credentials:
+            self.credentials = credentials
+        else:
+            self.credentials = {
+                "url": os.getenv("WATSONX_URL", "https://eu-de.ml.cloud.ibm.com"),
+                "apikey": os.getenv("WATSONX_API_KEY")
+            }
+            
+        self.project_id = project_id or os.getenv("WATSONX_PROJECT_ID")
+            
+        # Initialize the model
+        self.model = ModelInference(
+            model_id=self.model_id,
+            params=self.params,
+            credentials=self.credentials,
+            project_id=self.project_id
+        )
+    
+    def generate_text(
+        self, 
+        prompt: str, 
+        guardrails: bool = True
+    ) -> str:
+        """
+        Generate text based on the prompt.
+        
+        Args:
+            prompt: The text prompt to generate from
+            guardrails: Whether to enable WatsonX guardrails
+            
+        Returns:
+            The generated text response
+        """
+        try:
+            # Generate text using the WatsonX model
+            return self.model.generate_text(prompt=prompt, guardrails=guardrails)
+            
+        except Exception as e:
+            print(f"Error in WatsonX text generation: {e}")
+            return f"Error generating text: {str(e)}"
+    
+    def generate_text_stream(
+        self, 
+        prompt: str, 
+        guardrails: bool = True
+    ) -> List[str]:
+        """
+        Generate text in a streaming fashion.
+        
+        Args:
+            prompt: The text prompt to generate from
+            guardrails: Whether to enable WatsonX guardrails
+            
+        Returns:
+            List of text chunks from the stream
+        """
+        # Note: If WatsonX doesn't support streaming directly, this returns a list with a single item
+        return [self.generate_text(prompt, guardrails)]
+
+
+def create_model_inference(
+    provider: str,
+    model_id: str,
+    params: Dict[str, Any],
+    credentials: Optional[Dict[str, str]] = None,
+    project_id: Optional[str] = None
+) -> BaseModelInference:
+    """
+    Factory function to create the appropriate model inference instance.
+    
+    Args:
+        provider: The LLM provider ("openai" or "watsonx")
+        model_id: The ID of the model to use
+        params: Generation parameters
+        credentials: Optional API credentials
+        project_id: Optional project ID (required for WatsonX)
+        
+    Returns:
+        An instance of the appropriate model inference class
+    """
+    if provider.lower() == "openai":
+        return OpenAIModelInference(
+            model_id=model_id,
+            params=params,
+            credentials=credentials
+        )
+    elif provider.lower() == "watsonx":
+        return WatsonXModelInference(
+            model_id=model_id,
+            params=params,
+            credentials=credentials,
+            project_id=project_id
+        )
+    else:
+        raise ValueError(f"Unsupported provider: {provider}. Use 'openai' or 'watsonx'.")

@@ -1,52 +1,156 @@
+"""
+Agent configuration generator that analyzes user requirements.
+"""
 import os
 import json
 import streamlit as st
-from .model_inference import ModelInference
-
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+from .model_inference import create_model_inference, BaseModelInference
 
 class AgentGenerator:
-    def __init__(self):
-        # Initialize OpenAI model
-        self.model_id = "gpt-4o-mini"  
-        self.parameters = {
-            "max_new_tokens": 1000,  # Max tokens to generate
-            "temperature": 0.7,      # Creativity level
-            "top_p": 0.95,           # Nucleus sampling
-            "frequency_penalty": 0,  # Discourage repetition
-            "presence_penalty": 0    # Discourage topic repetition
-        }
+    """
+    Generates agent configurations based on natural language descriptions.
+    """
+    def __init__(self, provider: str = "openai"):
+        """
+        Initialize the generator with the specified provider.
+        
+        Args:
+            provider: The LLM provider to use ("openai" or "watsonx")
+        """
+        self.provider = provider.lower()
+        
+        # Initialize default model configurations
+        self._init_model_configs()
         
         # Initialize model on first use instead of constructor
         self.model = None
     
+    def _init_model_configs(self):
+        """Initialize model configurations for different providers."""
+        # OpenAI configuration
+        self.openai_config = {
+            "model_id": "gpt-4.1-mini",
+            "parameters": {
+                "max_new_tokens": 1000,  # Max tokens to generate
+                "temperature": 0.7,      # Creativity level
+                "top_p": 0.95,           # Nucleus sampling
+                "frequency_penalty": 0,  # Discourage repetition
+                "presence_penalty": 0    # Discourage topic repetition
+            }
+        }
+        
+        # WatsonX configuration
+        self.watsonx_config = {
+            "model_id": "meta-llama/llama-3-3-70b-instruct", 
+            "parameters": {
+                "decoding_method": "greedy",
+                "max_new_tokens": 1000,  # Increased for complex JSON responses
+                "min_new_tokens": 0,
+                "repetition_penalty": 1
+            }
+        }
+    
+    def set_provider(self, provider: str):
+        """
+        Change the LLM provider.
+        
+        Args:
+            provider: The LLM provider to use ("openai" or "watsonx")
+        """
+        if provider.lower() not in ["openai", "watsonx"]:
+            raise ValueError(f"Unsupported provider: {provider}. Use 'openai' or 'watsonx'.")
+            
+        self.provider = provider.lower()
+        # Reset model so it will be re-initialized with the new provider
+        self.model = None
+    
     def _initialize_model(self):
-        if self.model is None:
+        """Initialize the model if it hasn't been initialized yet."""
+        if self.model is not None:
+            return
+            
+        if self.provider == "openai":
             # Get API key from environment
             api_key = os.getenv("OPENAI_API_KEY")
             
-            if not api_key:
+            if not api_key and hasattr(st, 'session_state') and 'openai_api_key' in st.session_state:
+                api_key = st.session_state.openai_api_key
+                
+            if not api_key and st is not None:
                 st.warning("OpenAI API Key not found in environment. Please enter it below.")
-                api_key = st.text_input("Enter OpenAI API Key:", type="password")
-                if not api_key:
+                api_key = st.text_input("Enter OpenAI API Key:", type="password", key="openai_key_input")
+                if api_key:
+                    st.session_state.openai_api_key = api_key
+                else:
                     st.stop()
-                os.environ["OPENAI_API_KEY"] = api_key
             
             credentials = {"api_key": api_key}
             
-            self.model = ModelInference(
-                model_id=self.model_id,
-                params=self.parameters,
+            self.model = create_model_inference(
+                provider="openai",
+                model_id=self.openai_config["model_id"],
+                params=self.openai_config["parameters"],
                 credentials=credentials
             )
-        
+            
+        elif self.provider == "watsonx":
+            # Get WatsonX credentials
+            api_key = os.getenv("WATSONX_API_KEY")
+            url = os.getenv("WATSONX_URL", "https://eu-de.ml.cloud.ibm.com")
+            project_id = os.getenv("WATSONX_PROJECT_ID")
+            
+            if not api_key and hasattr(st, 'session_state') and 'watsonx_api_key' in st.session_state:
+                api_key = st.session_state.watsonx_api_key
+                
+            if not project_id and hasattr(st, 'session_state') and 'watsonx_project_id' in st.session_state:
+                project_id = st.session_state.watsonx_project_id
+                
+            # Request credentials if not available
+            if (not api_key or not project_id) and st is not None:
+                st.warning("WatsonX credentials not found in environment. Please enter them below.")
+                col1, col2 = st.columns(2)
+                with col1:
+                    api_key = st.text_input("Enter WatsonX API Key:", type="password", key="watsonx_key_input")
+                with col2:
+                    project_id = st.text_input("Enter WatsonX Project ID:", key="watsonx_project_input")
+                
+                if api_key and project_id:
+                    st.session_state.watsonx_api_key = api_key
+                    st.session_state.watsonx_project_id = project_id
+                else:
+                    st.stop()
+            
+            credentials = {
+                "url": url,
+                "apikey": api_key
+            }
+            
+            self.model = create_model_inference(
+                provider="watsonx",
+                model_id=self.watsonx_config["model_id"],
+                params=self.watsonx_config["parameters"],
+                credentials=credentials,
+                project_id=project_id
+            )
+    
     def analyze_prompt(self, user_prompt: str, framework: str) -> Dict[str, Any]:
+        """
+        Analyze a natural language prompt to generate agent configuration.
+        
+        Args:
+            user_prompt: The natural language description
+            framework: The agent framework to use
+            
+        Returns:
+            A dictionary containing the agent configuration
+        """
         self._initialize_model()
         
         system_prompt = self._get_system_prompt_for_framework(framework)
         
         try:
-            # Format prompt for OpenAI
+            # Format prompt for LLM
             formatted_prompt = f"""<|begin_of_text|>
 <|system|>
 {system_prompt}
@@ -55,7 +159,7 @@ class AgentGenerator:
 <|assistant|>
 """
             
-            # Generate response using OpenAI
+            # Generate response using the model
             response = self.model.generate_text(prompt=formatted_prompt)
             
             # Extract JSON from response
@@ -66,18 +170,56 @@ class AgentGenerator:
                 json_str = response[json_start:json_end]
                 return json.loads(json_str)
             else:
-                st.warning("Could not extract valid JSON from model response. Using default configuration.")
+                if st is not None:
+                    st.warning("Could not extract valid JSON from model response. Using default configuration.")
                 return self._get_default_config(framework)
                 
         except Exception as e:
-            st.error(f"Error in analyzing prompt: {e}")
+            if st is not None:
+                st.error(f"Error in analyzing prompt: {e}")
             return self._get_default_config(framework)
 
     def _get_system_prompt_for_framework(self, framework: str) -> str:
+        """
+        Get the system prompt for the specified framework.
+        
+        Args:
+            framework: The agent framework to use
+            
+        Returns:
+            The system prompt for the framework
+        """
         if framework == "crewai":
             return """
             You are an expert at creating AI research assistants using CrewAI. Based on the user's request,
             suggest appropriate agents, their roles, tools, and tasks. Format your response as JSON with this structure:
+            {
+                "agents": [
+                    {
+                        "name": "agent name",
+                        "role": "specific role description",
+                        "goal": "clear goal",
+                        "backstory": "relevant backstory",
+                        "tools": ["tool1", "tool2"],
+                        "verbose": true,
+                        "allow_delegation": true/false
+                    }
+                ],
+                "tasks": [
+                    {
+                        "name": "task name",
+                        "description": "detailed description",
+                        "tools": ["required tools"],
+                        "agent": "agent name",
+                        "expected_output": "specific expected output"
+                    }
+                ]
+            }
+            """
+        elif framework == "crewai-flow":
+            return """
+            You are an expert at creating AI research assistants using CrewAI Flow. Based on the user's request,
+            suggest appropriate agents, their roles, tools, and tasks organized in a workflow. Format your response as JSON with this structure:
             {
                 "agents": [
                     {
@@ -112,7 +254,7 @@ class AgentGenerator:
                         "role": "specific role description",
                         "goal": "clear goal",
                         "tools": ["tool1", "tool2"],
-                        "llm": "model name (e.g., gpt-4)"
+                        "llm": "model name (e.g., gpt-4.1-mini)"
                     }
                 ],
                 "nodes": [
@@ -142,7 +284,7 @@ class AgentGenerator:
                         "role": "specific role description",
                         "goal": "clear goal",
                         "tools": ["tool1", "tool2"],
-                        "llm": "model name (e.g., gpt-4)"
+                        "llm": "model name (e.g., gpt-4.1-mini)"
                     }
                 ],
                 "tools": [
@@ -173,7 +315,16 @@ class AgentGenerator:
             """
 
     def _get_default_config(self, framework: str) -> Dict[str, Any]:
-        if framework == "crewai":
+        """
+        Get a default configuration for the specified framework.
+        
+        Args:
+            framework: The agent framework to use
+            
+        Returns:
+            A default configuration dictionary
+        """
+        if framework == "crewai" or framework == "crewai-flow":
             return {
                 "agents": [{
                     "name": "default_assistant",
@@ -199,7 +350,7 @@ class AgentGenerator:
                     "role": "General Assistant",
                     "goal": "Help with basic tasks",
                     "tools": ["basic_tool"],
-                    "llm": "gpt-4"
+                    "llm": "gpt-4.1-mini"
                 }],
                 "nodes": [{
                     "name": "process_input",
@@ -219,7 +370,7 @@ class AgentGenerator:
                     "role": "General Assistant",
                     "goal": "Help with basic tasks",
                     "tools": ["basic_tool"],
-                    "llm": "gpt-4"
+                    "llm": "gpt-4.1-mini"
                 }],
                 "tools": [{
                     "name": "basic_tool",

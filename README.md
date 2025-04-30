@@ -1,6 +1,6 @@
 # Multi-Agent Generator
 
-A powerful tool that transforms plain English instructions into fully configured multi-agent AI teams - no scripting, no complexity. Powered by OpenAI GPT models with an intuitive Streamlit UI.
+A powerful tool that transforms plain English instructions into fully configured multi-agent AI teams - no scripting, no complexity. Powered by multiple LLM providers (OpenAI and IBM WatsonX) with an intuitive Streamlit UI.
 
 ## Features
 
@@ -10,28 +10,63 @@ A powerful tool that transforms plain English instructions into fully configured
   - **LangGraph**: LangChain's framework for stateful, multi-actor applications
   - **ReAct**: Reasoning + Acting framework for adaptive AI agents
 
+- **Multiple LLM Providers**:
+  - **OpenAI**: Use GPT models for code generation
+  - **IBM WatsonX**: Enterprise-grade access to Llama and other foundation models
+
 - **User-Friendly Interface**: Streamlit-based UI for effortless code generation
 - **Intelligent Analysis**: Analyzes natural language requirements to suggest appropriate agents, roles, and tasks
 - **Visualizations**: View agent relationships, workflow paths, and execution flow
 
 ## Installation
 
+### Basic Installation
 ```bash
 pip install multi-agent-generator
 ```
 
+### With WatsonX Support
+```bash
+pip install multi-agent-generator[watsonx]
+```
+
+### Development Installation
+```bash
+pip install multi-agent-generator[dev]
+```
+
 ## Prerequisites
 
-- OpenAI API key
-- Environment variables setup
+- OpenAI API key OR WatsonX API key and Project ID
+- Environment variables setup:
   - `OPENAI_API_KEY`: Your OpenAI API key
+  - Or for WatsonX:
+    - `WATSONX_API_KEY`: Your WatsonX API key
+    - `WATSONX_PROJECT_ID`: Your WatsonX project ID
+    - `WATSONX_URL`: WatsonX URL 
 
 ## Usage
 
 ### Command Line
 
+Basic usage with OpenAI (default):
 ```bash
 multi-agent-generator "I need a research assistant that summarizes papers and answers questions" --framework crewai
+```
+
+Using WatsonX instead:
+```bash
+multi-agent-generator "I need a research assistant that summarizes papers and answers questions" --framework crewai --provider watsonx
+```
+
+Save output to a file:
+```bash
+multi-agent-generator "I need a team to create viral social media content" --framework langgraph --output social_team.py
+```
+
+Get JSON configuration only:
+```bash
+multi-agent-generator "I need a team to analyze customer data" --framework react --format json
 ```
 
 ### Streamlit UI
@@ -39,6 +74,13 @@ multi-agent-generator "I need a research assistant that summarizes papers and an
 ```bash
 streamlit run -m multi_agent_generator.streamlit_app.app
 ```
+
+The UI allows you to:
+- Choose between OpenAI and WatsonX
+- Select which framework to use
+- Enter your requirements in plain English
+- Visualize the agent configuration
+- Copy or download the generated code
 
 ## Examples
 
@@ -77,6 +119,16 @@ LangGraph is LangChain's framework for building stateful, multi-actor applicatio
 ### ReAct
 
 ReAct (Reasoning + Acting) is a framework that combines reasoning and action in LLM agents. It prompts the model to generate both reasoning traces and task-specific actions in an interleaved manner, creating a synergy between the two that leads to improved performance.
+
+## LLM Providers
+
+### OpenAI
+
+OpenAI's GPT models provide state-of-the-art natural language understanding and code generation capabilities. The default model used is GPT-4o-mini.
+
+### IBM WatsonX
+
+IBM WatsonX provides enterprise-grade access to foundation models with IBM's security and governance features. The default model used is Llama-3-70B-Instruct.
 
 ## License
 

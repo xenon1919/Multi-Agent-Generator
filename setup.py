@@ -18,8 +18,8 @@ except FileNotFoundError:
 
 setup(
     name="multi-agent-generator",
-    version="0.1.0",
-    description="Generate multi-agent AI teams using CrewAI, LangGraph, and ReAct",
+    version="0.2.0",
+    description="Generate multi-agent AI teams using CrewAI, LangGraph, and ReAct with multiple LLM providers",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="Aakriti Aggarwal",
@@ -27,14 +27,26 @@ setup(
     url="https://github.com/aakriti1318/multi-agent-generator",
     packages=find_packages(),
     include_package_data=True,
-    install_requires=requirements,
+    install_requires=[
+        "streamlit>=1.22.0",
+        "crewai>=0.28.0",
+        "openai>=1.3.0",
+        "langchain>=0.0.271",
+        "langgraph>=0.0.16",
+        "python-dotenv>=1.0.0",
+        "pydantic>=2.0.0",
+    ],
+    extras_require={
+        "watsonx": ["ibm-watsonx-ai>=0.2.0"],
+        "dev": ["pytest>=7.0.0", "black>=23.0.0", "flake8>=6.0.0"],
+    },
     entry_points={
         "console_scripts": [
             "multi-agent-generator=multi_agent_generator.__main__:main",
         ],
     },
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
