@@ -3,9 +3,16 @@ Setup script for multi-agent-generator package.
 """
 from setuptools import setup, find_packages
 
-# Read requirements
-with open('requirements.txt') as f:
-    requirements = f.read().splitlines()
+# Define requirements directly
+REQUIREMENTS = [
+    "streamlit>=1.22.0",
+    "crewai>=0.28.0",
+    "openai>=1.3.0",
+    "langchain>=0.0.271",
+    "langgraph>=0.0.16",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+]
 
 # Read README for long description
 try:
@@ -27,15 +34,7 @@ setup(
     url="https://github.com/aakriti1318/multi-agent-generator",
     packages=find_packages(),
     include_package_data=True,
-    install_requires=[
-        "streamlit>=1.22.0",
-        "crewai>=0.28.0",
-        "openai>=1.3.0",
-        "langchain>=0.0.271",
-        "langgraph>=0.0.16",
-        "python-dotenv>=1.0.0",
-        "pydantic>=2.0.0",
-    ],
+    install_requires=REQUIREMENTS,
     extras_require={
         "watsonx": ["ibm-watsonx-ai>=0.2.0"],
         "dev": ["pytest>=7.0.0", "black>=23.0.0", "flake8>=6.0.0"],
