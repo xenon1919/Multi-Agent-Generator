@@ -6,3 +6,4 @@ langgraph>=0.0.16
 ibm-watsonx-ai>=0.2.0
 python-dotenv>=1.0.0
 pydantic>=2.0.0
+langchain-openai==0.3.28
