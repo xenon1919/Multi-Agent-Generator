@@ -192,56 +192,95 @@ class AgentGenerator:
         if framework == "crewai":
             return """
             You are an expert at creating AI research assistants using CrewAI. Based on the user's request,
-            suggest appropriate agents, their roles, tools, and tasks. Format your response as JSON with this structure:
+            suggest appropriate agents, their roles, tools, and tasks. 
+            
+            CRITICAL REQUIREMENTS:
+            1. Create specialized agents with distinct roles and expertise
+            2. ALWAYS assign the most appropriate agent to each task based on their role/expertise
+            3. Each task must have an "agent" field with the exact agent name
+            4. Match agent specialization to task requirements
+            
+            Process Types:
+            - Sequential: Tasks executed one after another in order
+            - Hierarchical: A manager agent coordinates and delegates tasks to specialized agents
+            
+            Format your response as JSON with this structure:
             {
+                "process": "sequential" or "hierarchical",
                 "agents": [
                     {
-                        "name": "agent name",
-                        "role": "specific role description",
-                        "goal": "clear goal",
-                        "backstory": "relevant backstory",
-                        "tools": ["tool1", "tool2"],
+                        "name": "agent_name",
+                        "role": "specific specialized role",
+                        "goal": "clear specific goal",
+                        "backstory": "relevant professional backstory",
+                        "tools": ["relevant_tool1", "relevant_tool2"],
                         "verbose": true,
                         "allow_delegation": true/false
                     }
                 ],
                 "tasks": [
                     {
-                        "name": "task name",
-                        "description": "detailed description",
-                        "tools": ["required tools"],
-                        "agent": "agent name",
+                        "name": "task_name",
+                        "description": "detailed task description",
+                        "tools": ["required tools for this task"],
+                        "agent": "exact_agent_name_from_above",
                         "expected_output": "specific expected output"
                     }
                 ]
             }
+            
+            AGENT-TASK ASSIGNMENT RULES:
+            - Research tasks → Research Specialist/Analyst
+            - Data collection → Data Specialist/Collector  
+            - Analysis tasks → Data Analyst/Statistician
+            - Writing tasks → Content Writer/Technical Writer
+            - Review tasks → Quality Reviewer/Editor
+            - Coordination tasks → Project Manager/Coordinator
+            
+            ALWAYS ensure each task has the most suitable agent assigned based on the agent's role and expertise.
+            Use exact agent names (matching the "name" field in agents array) in the "agent" field of tasks.
             """
         elif framework == "crewai-flow":
             return """
             You are an expert at creating AI research assistants using CrewAI Flow. Based on the user's request,
-            suggest appropriate agents, their roles, tools, and tasks organized in a workflow. Format your response as JSON with this structure:
+            suggest appropriate agents, their roles, tools, and tasks organized in a workflow. 
+            
+            CRITICAL REQUIREMENTS:
+            1. Create specialized agents with distinct roles and expertise
+            2. ALWAYS assign the most appropriate agent to each task based on their role/expertise
+            3. Each task must have an "agent" field with the exact agent name
+            4. Match agent specialization to task requirements
+            
+            Process Types:
+            - Sequential: Tasks flow through a predefined sequence with specific agent assignments
+            - Hierarchical: A manager coordinates the flow and delegates to specialized agents
+            
+            Format your response as JSON with this structure:
             {
+                "process": "sequential" or "hierarchical",
                 "agents": [
                     {
-                        "name": "agent name",
-                        "role": "specific role description",
-                        "goal": "clear goal",
-                        "backstory": "relevant backstory",
-                        "tools": ["tool1", "tool2"],
+                        "name": "agent_name",
+                        "role": "specific specialized role",
+                        "goal": "clear specific goal",
+                        "backstory": "relevant professional backstory",
+                        "tools": ["relevant_tool1", "relevant_tool2"],
                         "verbose": true,
                         "allow_delegation": true/false
                     }
                 ],
                 "tasks": [
                     {
-                        "name": "task name",
-                        "description": "detailed description",
-                        "tools": ["required tools"],
-                        "agent": "agent name",
+                        "name": "task_name",
+                        "description": "detailed task description",
+                        "tools": ["required tools for this task"],
+                        "agent": "exact_agent_name_from_above",
                         "expected_output": "specific expected output"
                     }
                 ]
             }
+            
+            ALWAYS ensure proper agent-to-task matching based on expertise and specialization.
             """
         elif framework == "langgraph":
             return """
@@ -326,22 +365,43 @@ class AgentGenerator:
         """
         if framework == "crewai" or framework == "crewai-flow":
             return {
-                "agents": [{
-                    "name": "default_assistant",
-                    "role": "General Assistant",
-                    "goal": "Help with basic tasks",
-                    "backstory": "Versatile assistant with general knowledge",
-                    "tools": ["basic_tool"],
-                    "verbose": True,
-                    "allow_delegation": False
-                }],
-                "tasks": [{
-                    "name": "basic_task",
-                    "description": "Handle basic requests",
-                    "tools": ["basic_tool"],
-                    "agent": "default_assistant",
-                    "expected_output": "Task completion"
-                }]
+                "process": "sequential",  # Default to sequential
+                "agents": [
+                    {
+                        "name": "research_specialist",
+                        "role": "Research Specialist",
+                        "goal": "Conduct thorough research and gather information",
+                        "backstory": "Expert researcher with years of experience in data gathering and analysis",
+                        "tools": ["search_tool", "web_scraper"],
+                        "verbose": True,
+                        "allow_delegation": False
+                    },
+                    {
+                        "name": "content_writer",
+                        "role": "Content Writer",
+                        "goal": "Create clear and comprehensive written content",
+                        "backstory": "Professional writer skilled in creating engaging and informative content",
+                        "tools": ["writing_tool", "grammar_checker"],
+                        "verbose": True,
+                        "allow_delegation": False
+                    }
+                ],
+                "tasks": [
+                    {
+                        "name": "research_task",
+                        "description": "Gather information and conduct research on the given topic",
+                        "tools": ["search_tool"],
+                        "agent": "research_specialist",
+                        "expected_output": "Comprehensive research findings and data"
+                    },
+                    {
+                        "name": "writing_task",
+                        "description": "Create written content based on research findings",
+                        "tools": ["writing_tool"],
+                        "agent": "content_writer",
+                        "expected_output": "Well-written content document"
+                    }
+                ]
             }
         elif framework == "langgraph":
             return {
