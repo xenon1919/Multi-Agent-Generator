@@ -116,5 +116,4 @@ def create_crewai_code(config: Dict[str, Any]) -> str:
     code += "if __name__ == \"__main__\":\n"
     code += "    result = run_workflow(\"Your query here\")\n"
     code += "    print(result)\n"
-    
-    return code
+    return code 

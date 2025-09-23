@@ -1,12 +1,14 @@
-from typing import List, Dict, Any, Optional
-from langgraph.graph import StateGraph, END
-from langchain.agents import AgentExecutor, create_react_agent
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
-from langchain_openai import ChatOpenAI
-from langchain_core.agents import AgentFinish, AgentAction
+from typing import Dict, Any, List
 from langchain_core.tools import BaseTool
-import json
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.output_parsers import StrOutputParser
+from langchain_openai import ChatOpenAI
+from langchain.agents import create_react_agent, AgentExecutor
 
+
+# ---------------------------
+# Classic ReAct (AgentExecutor)
+# ---------------------------
 def create_react_code(config: Dict[str, Any]) -> str:
     code = """from langchain_core.tools import BaseTool
 from langchain_core.prompts import ChatPromptTemplate
@@ -15,89 +17,141 @@ from langchain.agents import create_react_agent, AgentExecutor
 from typing import Dict, List, Any
 
 """
-    
+
     # Define tools
     code += "# Define tools\n"
     for tool in config.get("tools", []):
-        code += f"""class {tool["name"].capitalize()}Tool(BaseTool):
-    name = "{tool["name"]}"
-    description = "{tool["description"]}"
+        params = ", ".join(tool.get("parameters", {}).keys()) if tool.get("parameters") else ""
+        param_names = ", ".join(tool.get("parameters", {}).keys()) if tool.get("parameters") else ""
+        class_name = f"{tool['name'].capitalize()}Tool"
+        # Use double braces for literal {self.name} and {locals()} inside the generated code
+        code += f"""class {class_name}(BaseTool):
+    name = "{tool['name']}"
+    description = "{tool['description']}"
     
-    def _run(self, {", ".join(tool["parameters"].keys())}) -> str:
-        # Implement actual functionality here
-        return f"Result from {tool["name"]} tool"
+    def _run(self{', ' if params else ''}{params}) -> str:
+        try:
+            # TODO: implement actual functionality
+            return f"Executed {{self.name}} with inputs: {{locals()}}"
+        except Exception as e:
+            return f"Error in {{self.name}}: {{str(e)}}"
     
-    async def _arun(self, {", ".join(tool["parameters"].keys())}) -> str:
-        # Implement actual functionality here
-        return f"Result from {tool["name"]} tool"
+    async def _arun(self{', ' if params else ''}{params}) -> str:
+        return self._run({param_names})
 
 """
-    
+
     # Collect tools
-    code += "# Create tool instances\n"
     code += "tools = [\n"
     for tool in config.get("tools", []):
         code += f"    {tool['name'].capitalize()}Tool(),\n"
     code += "]\n\n"
-    
-    # Define example-based prompt
-    code += "# Define example-based ReAct prompt\n"
-    examples = config.get("examples", [])
-    if examples:
-        code += "examples = [\n"
-        for example in examples:
-            code += f"""    {{
-        "query": "{example["query"]}",
-        "thought": "{example["thought"]}",
-        "action": "{example["action"]}",
-        "observation": "{example["observation"]}",
-        "final_answer": "{example["final_answer"]}"
-    }},
-"""
-        code += "]\n\n"
-    
-    # Default agent
+
+    # Agent setup
     if config.get("agents"):
-        agent = config["agents"][0]  # Use the first agent
-        code += f"""# Create ReAct agent
-llm = ChatOpenAI(model="{agent["llm"]}")
+        agent = config["agents"][0]
+        # safe fallback for missing llm field
+        llm_model = agent.get("llm", "gpt-4.1-mini")
+        code += f"""llm = ChatOpenAI(model="{llm_model}")
 
-# Create the agent using the ReAct framework
 react_prompt = ChatPromptTemplate.from_messages([
-    ("system", \"\"\"You are {agent["role"]}. Your goal is to {agent["goal"]}.
-    
-Use the following tools to assist you:
-{{tool_descriptions}}
-
-Use the following format:
-Question: The user question you need to answer
-Thought: Consider what to do to best answer the question
-Action: The action to take, should be one of {{tool_names}}
-Action Input: The input to the action
-Observation: The result of the action
-... (Thought/Action/Action Input/Observation can repeat)
-Thought: I now know the final answer
-Final Answer: The final answer to the question\"\"\"),
+    ("system", "You are {agent['role']}. Your goal is {agent['goal']}. Use tools when needed."),
     ("human", "{{input}}")
 ])
 
 agent = create_react_agent(llm, tools, react_prompt)
-
-# Create an agent executor
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
-# Run the agent
 def run_agent(query: str) -> str:
-    \"\"\"Run the agent on a query.\"\"\"
     response = agent_executor.invoke({{"input": query}})
-    return response.get("output", "No response generated")
+    # Try to show intermediate trace if available
+    try:
+        if isinstance(response, dict) and 'intermediate_steps' in response:
+            print('--- Agent Trace ---')
+            for step in response['intermediate_steps']:
+                print(step)
+            print('-------------------')
+    except Exception:
+        pass
+    return response.get("output", "No response generated") if isinstance(response, dict) else str(response)
 
-# Example usage
 if __name__ == "__main__":
     result = run_agent("Your query here")
     print(result)
 """
+    return code
+
+# ---------------------------
+# LCEL-based ReAct (future-proof)
+# ---------------------------
+def create_react_lcel_code(config: Dict[str, Any]) -> str:
+    code = """from typing import Dict, Any, List
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+from langchain_openai import ChatOpenAI
+from langchain_core.tools import BaseTool
+
+"""
+
+    # Define tools
+    code += "# Define tools\n"
+    for tool in config.get("tools", []):
+        params = ", ".join(tool.get("parameters", {}).keys()) if tool.get("parameters") else ""
+        param_names = ", ".join(tool.get("parameters", {}).keys()) if tool.get("parameters") else ""
+        class_name = f"{tool['name'].capitalize()}Tool"
+        code += f"""class {class_name}(BaseTool):
+    name = "{tool['name']}"
+    description = "{tool['description']}"
     
-    # Now wrap the generated code in JSON format
-    # return json.dumps({"generated_code": code}, indent=4)
+    def _run(self{', ' if params else ''}{params}) -> str:
+        try:
+            # TODO: implement actual logic for the tool
+            return f"Executed {{self.name}} with inputs: {{locals()}}"
+        except Exception as e:
+            return f"Error in {{self.name}}: {{str(e)}}"
+    
+    async def _arun(self{', ' if params else ''}{params}) -> str:
+        return self._run({param_names})
+
+"""
+
+    # Collect tools
+    code += "tools = [\n"
+    for tool in config.get("tools", []):
+        code += f"    {tool['name'].capitalize()}Tool(),\n"
+    code += "]\n\n"
+
+    if config.get("agents"):
+        agent = config["agents"][0]
+        llm_model = agent.get("llm", "gpt-4.1-mini")
+        code += f"""llm = ChatOpenAI(model="{llm_model}")
+
+react_prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are {agent['role']}. Your goal is {agent['goal']}. Use tools when needed."),
+    MessagesPlaceholder("history"),
+    ("human", "{{input}}")
+])
+
+chain = (
+    {{"input": RunnablePassthrough(), "history": RunnablePassthrough()}}
+    | react_prompt
+    | llm
+    | StrOutputParser()
+)
+
+def run_agent(query: str, history: List[str] = []) -> str:
+    response = chain.invoke({{"input": query, "history": history}})
+    # If the config included examples with thoughts/actions/observations, print them for debugging
+    try:
+        print("\\n=== Example Traces (from config) ===")
+        # placeholder: in generated file, the config may be embedded or passed in; this prints examples if present
+    except Exception:
+        pass
+    return response
+
+if __name__ == "__main__":
+    result = run_agent("Your query here")
+    print(result)
+"""
     return code
