@@ -29,6 +29,12 @@ def main():
         help="Agent framework to use (default: crewai)"
     )
     parser.add_argument(
+        "--process",
+        choices=["sequential", "hierarchical"],
+        default="sequential",
+        help="Process type for CrewAI (default: sequential)"
+    )
+    parser.add_argument(
         "--provider",
         default="openai",
         help="LLM provider to use (e.g., openai, watsonx, ollama, anthropic, groq, etc.)"
@@ -51,6 +57,11 @@ def main():
     generator = AgentGenerator(provider=args.provider)
     print(f"Analyzing prompt using {args.provider.upper()}...")
     config = generator.analyze_prompt(args.prompt, args.framework)
+    
+    # Add process type to config for CrewAI frameworks
+    if args.framework in ["crewai", "crewai-flow"]:
+        config["process"] = args.process
+        print(f"Using {args.process} process for CrewAI...")
     
     # Generate code based on the framework
     print(f"Generating {args.framework} code...")
