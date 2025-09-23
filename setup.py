@@ -2,31 +2,29 @@
 Setup script for multi-agent-generator package.
 """
 from setuptools import setup, find_packages
+import pathlib
 
-# Define requirements directly
+HERE = pathlib.Path(__file__).parent
+try:
+    long_description = (HERE / "README.md").read_text(encoding="utf-8")
+except FileNotFoundError:
+    long_description = "Multi-Agent Generator - Generate multi-agent AI code from natural language"
+
 REQUIREMENTS = [
+    "litellm>=0.1.0",
     "streamlit>=1.22.0",
-    "crewai>=0.28.0",
-    "openai>=1.3.0",
     "langchain>=0.0.271",
+    "langchain-core>=0.0.1",
+    "langchain-openai>=0.0.1",
     "langgraph>=0.0.16",
     "python-dotenv>=1.0.0",
     "pydantic>=2.0.0",
 ]
 
-# Read README for long description
-try:
-    with open('README.md', encoding='utf-8') as f:
-        long_description = f.read()
-except FileNotFoundError:
-    long_description = (
-        "Multi-Agent Generator - Generate multi-agent AI code from natural language"
-    )
-
 setup(
     name="multi-agent-generator",
-    version="0.2.0",
-    description="Generate multi-agent AI teams using CrewAI, LangGraph, and ReAct with multiple LLM providers",
+    version="0.3.0",
+    description="Generate multi-agent AI teams from plain English using LiteLLM-compatible providers",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="Aakriti Aggarwal",
@@ -37,7 +35,7 @@ setup(
     install_requires=REQUIREMENTS,
     extras_require={
         "watsonx": ["ibm-watsonx-ai>=0.2.0"],
-        "dev": ["pytest>=7.0.0", "black>=23.0.0", "flake8>=6.0.0"],
+        "dev": ["pytest>=7.0.0", "black>=23.0.0", "flake8>=6.0.0", "twine", "build"],
     },
     entry_points={
         "console_scripts": [

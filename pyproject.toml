@@ -1,14 +1,14 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools>=42", "wheel", "setuptools_scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "multi-agent-generator"
-version = "0.2.0"
-description = "Generate multi-agent AI teams using CrewAI, LangGraph, and ReAct with multiple LLM providers"
+version = "0.3.0"
+description = "Generate multi-agent AI teams from plain English, supporting multiple LLM backends via LiteLLM"
 readme = "README.md"
 requires-python = ">=3.8"
-license = {text = "MIT"}
+license = { text = "MIT" }
 authors = [{ name = "Aakriti Aggarwal", email = "aakritiaggarwal2k@gmail.com" }]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -20,18 +20,20 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
 ]
 dependencies = [
+    "litellm>=0.1.0",            # unified provider-agnostic client
     "streamlit>=1.22.0",
-    "crewai>=0.28.0",
-    "openai>=1.3.0",
     "langchain>=0.0.271",
+    "langchain-core>=0.0.1",
+    "langchain-openai>=0.0.1",
     "langgraph>=0.0.16",
     "python-dotenv>=1.0.0",
     "pydantic>=2.0.0",
 ]
 
 [project.optional-dependencies]
+# keep watsonx as opt-in if people want IBM-specific SDK
 watsonx = ["ibm-watsonx-ai>=0.2.0"]
-dev = ["pytest>=7.0.0", "black>=23.0.0", "flake8>=6.0.0"]
+dev = ["pytest>=7.0.0", "black>=23.0.0", "flake8>=6.0.0", "twine", "build"]
 
 [project.urls]
 "Homepage" = "https://github.com/aakriti1318/multi-agent-generator"
