@@ -1,3 +1,4 @@
+# mutli-agent-generator/__main__.py
 """
 Command line interface for multi-agent-generator.
 """
@@ -16,21 +17,21 @@ from .frameworks import (
 # Load environment variables from .env file if present
 load_dotenv()
 
+
 def main():
     """Command line entry point."""
     parser = argparse.ArgumentParser(description="Generate multi-agent AI code")
     parser.add_argument("prompt", help="Plain English description of what you need")
     parser.add_argument(
         "--framework", 
-        choices=["crewai", "crewai-flow", "langgraph", "react"], 
+        choices=["crewai", "crewai-flow", "langgraph", "react", "react-lcel"], 
         default="crewai",
         help="Agent framework to use (default: crewai)"
     )
     parser.add_argument(
         "--provider",
-        choices=["openai", "watsonx"],
         default="openai",
-        help="LLM provider to use (default: openai)"
+        help="LLM provider to use (e.g., openai, watsonx, ollama, anthropic, groq, etc.)"
     )
     parser.add_argument(
         "--output", 
@@ -43,23 +44,10 @@ def main():
         help="Output format (default: code)"
     )
     
+
     args = parser.parse_args()
     
-    # Check for API keys in environment
-    if args.provider == "openai" and not os.getenv("OPENAI_API_KEY"):
-        print("Error: OPENAI_API_KEY environment variable not found.")
-        print("Please set your OpenAI API key using:")
-        print("export OPENAI_API_KEY=your_api_key_here")
-        return
-    
-    if args.provider == "watsonx" and (not os.getenv("WATSONX_API_KEY") or not os.getenv("WATSONX_PROJECT_ID")):
-        print("Error: WatsonX credentials not found in environment variables.")
-        print("Please set your WatsonX credentials using:")
-        print("export WATSONX_API_KEY=your_api_key_here")
-        print("export WATSONX_PROJECT_ID=your_project_id_here")
-        return
-    
-    # Analyze the prompt with specified provider
+    # Initialize generator
     generator = AgentGenerator(provider=args.provider)
     print(f"Analyzing prompt using {args.provider.upper()}...")
     config = generator.analyze_prompt(args.prompt, args.framework)
@@ -74,6 +62,10 @@ def main():
         code = create_langgraph_code(config)
     elif args.framework == "react":
         code = create_react_code(config)
+    elif args.framework == "react-lcel":
+        from .frameworks.react_generator import create_react_lcel_code
+        code = create_react_lcel_code(config)
+
     else:
         print(f"Unsupported framework: {args.framework}")
         return
@@ -93,6 +85,7 @@ def main():
         print(f"Output successfully written to {args.output}")
     else:
         print(output)
+
 
 if __name__ == "__main__":
     main()
