@@ -30,9 +30,21 @@ class ModelInference:
         **default_params
     ):
         self.model = model
-        self.api_key = api_key or os.getenv("API_KEY") or os.getenv("OPENAI_API_KEY")
+        self.api_key = api_key or self._get_api_key_for_model(model)
         self.api_base = api_base or os.getenv("API_BASE")
         self.default_params = default_params
+
+    def _get_api_key_for_model(self, model: str) -> Optional[str]:
+        """Get the appropriate API key based on the model name."""
+        if model.startswith("gemini"):
+            return os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        elif model.startswith("gpt") or model.startswith("text-davinci"):
+            return os.getenv("OPENAI_API_KEY")
+        elif model.startswith("watsonx"):
+            return os.getenv("WATSONX_API_KEY")
+        else:
+            # Fallback to generic API_KEY
+            return os.getenv("API_KEY") or os.getenv("OPENAI_API_KEY")
 
     def generate_text(
         self,

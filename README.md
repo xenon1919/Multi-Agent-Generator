@@ -1,173 +1,196 @@
-# Multi-Agent Generator
-<img width="807" height="264" alt="Screenshot 2025-08-18 at 12 59 52 PM" src="https://github.com/user-attachments/assets/90665135-80a3-43e2-82cc-ae7fa1dcc6a3" />
+# 🤖 Multi-Agent Generator
 
-**PyPi Link** - [Multi-agent-generator](https://pypi.org/project/multi-agent-generator/)
+<div align="center">
 
-A powerful tool that transforms plain English instructions into fully configured multi-agent AI teams — no scripting, no complexity.
-Powered by [LiteLLM](https://docs.litellm.ai/) for **provider-agnostic support** (OpenAI, WatsonX, Ollama, Anthropic, etc.) with both a **CLI** and an optional **Streamlit UI**.
+[![PyPI version](https://badge.fury.io/py/multi-agent-generator.svg)](https://pypi.org/project/multi-agent-generator/)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
----
+**Transform plain English into fully configured multi-agent AI systems**
 
-## Features
+*No coding required • Multiple frameworks • Enterprise-ready*
 
-* Generate agent code for multiple frameworks:
-
-  * **CrewAI**: Structured workflows for multi-agent collaboration
-  * **CrewAI Flow**: Event-driven workflows with state management
-  * **LangGraph**: LangChain’s framework for stateful, multi-actor applications
-  * **ReAct (classic)**: Reasoning + Acting agents using `AgentExecutor`
-  * **ReAct (LCEL)**: Future-proof ReAct built with LangChain Expression Language (LCEL)
-
-* **Provider-Agnostic Inference** via LiteLLM:
-
-  * Supports OpenAI, IBM WatsonX, Ollama, Anthropic, and more
-  * Swap providers with a single CLI flag or environment variable
-
-* **Flexible Output**:
-
-  * Generate Python code
-  * Generate JSON configs
-  * Or both combined
-
-* **Streamlit UI** (optional):
-
-  * Interactive prompt entry
-  * Framework selection
-  * Config visualization
-  * Copy or download generated code
+</div>
 
 ---
 
-## Installation
+## ✨ What is Multi-Agent Generator?
 
-### Basic Installation
+Multi-Agent Generator is a powerful tool that converts natural language descriptions into production-ready multi-agent AI systems. Simply describe what you need in plain English, and get fully functional code for popular AI frameworks.
+
+### 🎯 Key Benefits
+- **Zero Coding Required**: Describe your needs in natural language
+- **Multiple AI Frameworks**: Support for CrewAI, LangGraph, ReAct, and more
+- **Enterprise Ready**: Works with OpenAI, IBM WatsonX, Google Gemini, and other providers
+- **Modern UI**: Beautiful Streamlit interface with real-time preview
+- **Production Ready**: Generate clean, documented, runnable code
+
+---
+
+## 🚀 Features
+
+### 🔧 Supported Frameworks
+- **CrewAI**: Role-playing autonomous agents with specialized tasks
+- **CrewAI Flow**: Event-driven workflows with state management
+- **LangGraph**: Stateful multi-actor applications with graph-based execution
+- **ReAct**: Reasoning + Acting agents with tool integration
+
+### 🌐 LLM Provider Support
+- **OpenAI**: GPT-4, GPT-3.5 models
+- **Google Gemini**: Gemini 2.5 Flash with multimodal capabilities
+- **IBM WatsonX**: Enterprise-grade Llama and Granite models
+- **Anthropic**: Claude models (via LiteLLM)
+- **Ollama**: Local model execution
+- **And more**: Any provider supported by LiteLLM
+
+### 💻 Multiple Interfaces
+- **Streamlit Web UI**: Interactive, visual interface
+- **Command Line**: Scriptable automation
+- **Python API**: Programmatic integration
+
+---
+
+## 📦 Installation
 
 ```bash
 pip install multi-agent-generator
 ```
 
+### 🔧 Quick Setup
+
+1. **Install the package**:
+   ```bash
+   pip install multi-agent-generator
+   ```
+
+2. **Set up your API key** (choose one):
+   ```bash
+   # For OpenAI
+   export OPENAI_API_KEY="your-openai-key"
+   
+   # For Google Gemini
+   export GEMINI_API_KEY="your-gemini-key"
+   
+   # For IBM WatsonX
+   export WATSONX_API_KEY="your-watsonx-key"
+   export WATSONX_PROJECT_ID="your-project-id"
+   ```
+
+3. **Start the web interface**:
+   ```bash
+   streamlit run streamlit_app.py
+   ```
+
 ---
 
-## Prerequisites
+## 🎮 Usage
 
-* At least one supported LLM provider (OpenAI, WatsonX, Ollama, etc.)
-* Environment variables setup:
+### 🌐 Web Interface (Recommended)
 
-  * `OPENAI_API_KEY` (for OpenAI)
-  * `WATSONX_API_KEY`, `WATSONX_PROJECT_ID`, `WATSONX_URL` (for WatsonX)
-  * `OLLAMA_URL` (for Ollama)
-  * Or a generic `API_KEY` / `API_BASE` if supported by LiteLLM
-
-> ⚡ You can freely switch providers using `--provider` in CLI or by setting environment variables.
-
----
-
-## Usage
-
-### Command Line
-
-Basic usage with OpenAI (default):
+Launch the beautiful Streamlit interface:
 
 ```bash
-multi-agent-generator "I need a research assistant that summarizes papers and answers questions" --framework crewai
+streamlit run streamlit_app.py
 ```
 
-Using WatsonX instead:
+Then:
+1. Select your LLM provider (OpenAI, Gemini, WatsonX)
+2. Choose a framework (CrewAI, LangGraph, ReAct)
+3. Describe your needs in plain English
+4. Generate and download your agent system!
 
+### 💻 Command Line Interface
+
+**Basic Usage:**
 ```bash
-multi-agent-generator "I need a research assistant that summarizes papers and answers questions" --framework crewai --provider watsonx
+multi-agent-generator "I need a research assistant" --framework crewai
 ```
 
-Using Ollama locally:
-
+**With Gemini:**
 ```bash
-multi-agent-generator "Build me a ReAct assistant for customer support" --framework react-lcel --provider ollama
+multi-agent-generator "Build a customer support team" --framework crewai --provider gemini
 ```
 
-Save output to a file:
-
+**Save to file:**
 ```bash
-multi-agent-generator "I need a team to create viral social media content" --framework langgraph --output social_team.py
+multi-agent-generator "Data analysis team" --framework langgraph --output my_agents.py
 ```
 
-Get JSON configuration only:
-
+**JSON configuration only:**
 ```bash
-multi-agent-generator "I need a team to analyze customer data" --framework react --format json
+multi-agent-generator "Content creation team" --framework react --format json
 ```
 
 ---
 
-## Examples
+## 💡 Examples
 
-### Research Assistant
+### 🔬 Research Assistant
+```
+"I need a research assistant that summarizes papers and answers questions"
+```
+**Generates**: Multi-agent system with research specialist, data collector, and report writer.
 
+### 📱 Social Media Team
 ```
-I need a research assistant that summarizes papers and answers questions
+"I need a team to create viral social media content and manage our brand presence"
 ```
+**Generates**: Content creators, social media managers, and brand strategists working together.
 
-### Content Creation Team
+### 📊 Data Analysis Pipeline
+```
+"Build me a team to analyze customer data and create visualizations"
+```
+**Generates**: Data analysts, visualization specialists, and insight generators.
 
+### 🎯 Customer Support System
 ```
-I need a team to create viral social media content and manage our brand presence
+"Create a customer support workflow that handles inquiries and escalates complex issues"
 ```
-
-### Customer Support (LangGraph)
-
-```
-Build me a LangGraph workflow for customer support
-```
+**Generates**: Support agents, escalation managers, and knowledge base specialists.
 
 ---
 
-## Frameworks
+## 🛠️ Framework Details
 
-### CrewAI
-
-Role-playing autonomous AI agents with goals, roles, and backstories.
-
-### CrewAI Flow
-
-Event-driven workflows with sequential, parallel, or conditional execution.
-
-### LangGraph
-
-Directed graph of agents/tools with stateful execution.
-
-### ReAct (classic)
-
-Reasoning + Acting agents built with `AgentExecutor`.
-
-### ReAct (LCEL)
-
-Modern ReAct implementation using LangChain Expression Language — better for debugging and future-proof orchestration.
+| Framework | Best For | Key Features |
+|-----------|----------|--------------|
+| **CrewAI** | Role-based teams | Specialized agents with clear roles and responsibilities |
+| **CrewAI Flow** | Complex workflows | Event-driven processes with state management |
+| **LangGraph** | Stateful applications | Graph-based execution with conditional routing |
+| **ReAct** | Tool-using agents | Reasoning + Acting with external tool integration |
 
 ---
 
-## LLM Providers
+## 🌐 Supported LLM Providers
 
-### OpenAI
-
-State-of-the-art GPT models (default: `gpt-4o-mini`).
-
-### IBM WatsonX
-
-Enterprise-grade access to Llama and other foundation models (default: `llama-3-70b-instruct`).
-
-### Ollama
-
-Run Llama and other models locally.
-
-### Anthropic
-
-Use Claude models for agent generation.
-
-…and more, via LiteLLM.
+| Provider | Models | Best For | Setup |
+|----------|--------|----------|-------|
+| **OpenAI** | GPT-4, GPT-3.5 | General purpose, high quality | `OPENAI_API_KEY` |
+| **Google Gemini** | Gemini 2.5 Flash | Multimodal, fast responses | `GEMINI_API_KEY` |
+| **IBM WatsonX** | Llama-3, Granite | Enterprise, compliance | `WATSONX_API_KEY` + `WATSONX_PROJECT_ID` |
+| **Anthropic** | Claude | Safety-focused | Via LiteLLM |
+| **Ollama** | Local models | Privacy, offline | Local installation |
 
 ---
 
-## License
+## 🤝 Contributing
 
-MIT
+We welcome contributions! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
-Made with ❤️ If you like star the repo and share it with AI Enthusiasts.
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## ⭐ Support
+
+If you find this project helpful, please consider:
+- ⭐ Starring the repository
+- 🐛 Reporting bugs or requesting features
+- 🔄 Sharing with the AI community
+
+**Made with ❤️ for the AI community**

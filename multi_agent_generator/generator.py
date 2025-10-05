@@ -45,7 +45,8 @@ class AgentGenerator:
         default_models = {
             "openai": "gpt-4o-mini",
             "watsonx": "watsonx/meta-llama/llama-3-3-70b-instruct",
-            "ollama": "ollama/llama3.2:3b"
+            "ollama": "ollama/llama3.2:3b",
+            "gemini": "gemini/gemini-2.0-flash-exp"
         }
         model_name = default_models.get(self.provider, self.provider)
 
